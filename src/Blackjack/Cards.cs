@@ -7,12 +7,34 @@ using System.Threading.Tasks;
 
 namespace Blackjack
 {
+	/// <summary>
+	/// A single card.
+	/// </summary>
     public class Card
     {
+		/// <summary>
+		/// The ID of the card represented as an int. 1: Ace, 11-13: Jack-King.
+		/// </summary>
 		public int ID { get; }
+
+		/// <summary>
+		/// Spade, Heart, Club, Diamond
+		/// </summary>
 		public string Suit { get; }
+
+		/// <summary>
+		/// The character representing the card face value.
+		/// </summary>
 		public string Symbol { get; }
+
+		/// <summary>
+		/// The character representing the card's suit.
+		/// </summary>
 		public char SuitSymbol { get; }
+
+		/// <summary>
+		/// Whether the card shows its values or appears as ??.
+		/// </summary>
 		public bool IsVisible { get; set; }
 		public int Value
 		{
@@ -26,6 +48,11 @@ namespace Blackjack
 			}
 		}
 
+		/// <summary>
+		/// Constructor. Creates a card of the given ID and suit.
+		/// </summary>
+		/// <param name="id">Value of the card from Ace to King, represented as 1-13.</param>
+		/// <param name="suit">Suit of the card.</param>
 		public Card(int id, string suit)
 		{
 			ID = id;
@@ -35,6 +62,10 @@ namespace Blackjack
 			IsVisible = true;
 		}
 
+		/// <summary>
+		/// Gives the card as a string of two characters.
+		/// </summary>
+		/// <returns>If the card is hidden, returns ??. Otherwise, returns two characters representing the card.</returns>
 		public override string ToString()
 		{
 			if (IsVisible)
@@ -43,6 +74,9 @@ namespace Blackjack
 				return "??";
 		}
 
+		/// <summary>
+		/// A map from IDs to symbols of the cards.
+		/// </summary>
 		public static Dictionary<int, string> CardSymbols = new Dictionary<int, string>()
 		{
 			{1, "A" },
@@ -60,6 +94,9 @@ namespace Blackjack
 			{13, "K" }
 		};
 
+		/// <summary>
+		/// A map from suits to symbols of the suits.
+		/// </summary>
 		public static Dictionary<string, char> SuitSymbols = new Dictionary<string, char>()
 		{
 			{"spade",'\u2660'},
@@ -69,15 +106,21 @@ namespace Blackjack
 		};
 	}
 
+	/// <summary>
+	/// A deck of 52 cards.
+	/// </summary>
 	public class Deck
 	{
-		public ArrayList Cards;
+		public List<Card> Cards;
 
+		/// <summary>
+		/// Initializes a standard 52 card deck.
+		/// </summary>
 		public Deck()
 		{
 			string[] suits = { "spade","heart","club","diamond" };
 
-			Cards = new ArrayList(52);
+			Cards = new List<Card>(52);
 
 			foreach (var suit in suits)
 				for (int val = 0; val < 13; val++)
@@ -86,6 +129,9 @@ namespace Blackjack
 			Shuffle();
 		}
 
+		/// <summary>
+		/// Randomizes the order of the cards.
+		/// </summary>
 		public void Shuffle()
 		{
 			Random rand = new Random();
@@ -101,6 +147,12 @@ namespace Blackjack
 			}
 		}
 
+		/// <summary>
+		/// Deals a given number of cards to a hand.
+		/// </summary>
+		/// <param name="h">The Hand object to which the deck will deal cards.</param>
+		/// <param name="num">The number of cards to deal.</param>
+		/// <param name="hideNum">The number of cards which will be hidden.</param>
 		public void DealHand(Hand h, int num, int hideNum=0)
 		{
 			for (var i = 0; i < num; i++)
@@ -109,7 +161,12 @@ namespace Blackjack
 			}
 		}
 
-		public void DealCard(Hand hand, bool hide)
+		/// <summary>
+		/// Deals a card to a given hand.
+		/// </summary>
+		/// <param name="hand">The hand which receives the card.</param>
+		/// <param name="hide">Whether or not to hide the card (it will appear as ??).</param>
+		public void DealCard(Hand hand, bool hide=false)
 		{
 			int idx = new Random().Next(Cards.Count);
 
@@ -120,7 +177,10 @@ namespace Blackjack
 			Cards.Remove(Cards[idx]);
 		}
 
-
+		/// <summary>
+		/// Outputs the contents of the deck.
+		/// </summary>
+		/// <returns>Returns every card on a separate line.</returns>
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
@@ -132,15 +192,36 @@ namespace Blackjack
 		}
 	}
 
-	public class Hand
+	/// <summary>
+	/// A single hand of several cards.
+	/// </summary>
+	public abstract class Hand
 	{
-		public ArrayList Cards;
+		/// <summary>
+		/// The list of cards which holds the hand.
+		/// </summary>
+		public List<Card> Cards { get; set; }
 
+		/// <summary>
+		/// Initializes the hand.
+		/// </summary>
 		public Hand()
 		{
-			Cards = new ArrayList();
+			Cards = new List<Card>();
+		}
+		
+		/// <summary>
+		/// Adds a card to the hand.
+		/// </summary>
+		/// <param name="c">The card to add.</param>
+		public void Add(Card c) {
+			Cards.Add(c);
 		}
 
+		/// <summary>
+		/// Converts the hand to a string.
+		/// </summary>
+		/// <returns>Returns the ToString() for each card separated by spaces.</returns>
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
@@ -149,10 +230,51 @@ namespace Blackjack
 
 			return sb.ToString();
 		}
+	}
 
-		public void Add(Card c)
+	/// <summary>
+	/// A hand which is able to calculate its value according to the rules of blackjack.
+	/// </summary>
+	public class BlackjackHand : Hand
+	{
+		/// <summary>
+		/// A calculcated property. The value of the hand.
+		/// </summary>
+		public int HandValue
 		{
-			Cards.Add(c);
+			get
+			{
+				int handVal = 0;
+
+				foreach(Card c in Cards)
+				{
+					int cardID = c.ID;
+
+					if(cardID >= 10)
+					{
+						handVal += 10;
+					}
+					else if (cardID == 1)
+					{
+						handVal += 11;
+					}
+					else
+					{
+						handVal += cardID;
+					}
+				}
+
+				int downgradedAces = 0;
+				int numAces = Cards.Count(c => c.ID == 1);
+
+				while (handVal > 21 && numAces > downgradedAces)
+				{
+					handVal -= 10;
+					downgradedAces++;
+				}
+
+				return handVal;
+			}
 		}
 	}
 }

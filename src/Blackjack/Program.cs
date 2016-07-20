@@ -9,21 +9,15 @@ namespace Blackjack
     {
         public static void Main(string[] args)
         {
-			Console.OutputEncoding = System.Text.Encoding.Unicode;
+			// Notice how little occurs here. Everything is encapsulated in the behaviors of the classes.
 
-			Deck deck = new Deck();
+			// Initialize the game.
+			Blackjack game = new Blackjack(new string[]{ "Dealer", "Player1" });
 
-			//Console.Write(deck);
+			// Run the game.
+			game.GameLoop();
 
-			Hand hand = new Hand();
-			Hand hand2 = new Hand();
-
-			deck.DealHand(hand, 2, 1);
-			deck.DealHand(hand2, 5, 5);
-
-			Console.WriteLine(hand);
-			Console.WriteLine(hand2);
-
+			// Wait before closing the console at the end of the game.
 			Console.ReadLine();
         }
     }
